@@ -5,35 +5,22 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.CognitoIdentityProvider;
 using Amazon.CognitoIdentityProvider.Model;
-using AmazonCognitoSpike.Services;
+using AmazonCognitoSpike.Services.IAASServices;
+using AmazonCognitoSpike.Services.IAASServices.Implementations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AmazonCognitoSpike.Controllers
+namespace AmazonCognitoSpike.Controllers.Authentication
 {
     [Route("api/[controller]")]
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
-        public class UserRegisterParams
-        {
-            public string Email { get; set; }
-            public string Password { get; set; }
-        }
+        private readonly IIAASService authService;
 
-        public class UserSignInParams
+        public AuthenticationController(IIAASService _authService)
         {
-            public string Email { get; set; }
-            public string Password { get; set; }
-            // TODO: save this to the Org record in the API project when integrating
-            public string UserPoolId { get; set; }
-        }
-
-        private readonly AWSCognitoService Cognito;
-
-        public AuthenticationController(AWSCognitoService _cognito)
-        {
-            Cognito = _cognito;
+            authService = _authService;
         }
 
         // POST api/authentication/register
@@ -43,8 +30,7 @@ namespace AmazonCognitoSpike.Controllers
         {
             try
             {
-                var response = await Cognito.RegisterUser(user.Email, user.Password);
-
+                await authService.Register(user.Email, user.Password);
                 return Ok();
             }
             catch (Exception exception)
@@ -60,9 +46,8 @@ namespace AmazonCognitoSpike.Controllers
         {
             try
             {
-                var response = await Cognito.SignIn(user.UserPoolId, user.Email, user.Password);
-
-                return Ok(response.AuthenticationResult.IdToken);
+                var response = await authService.SignIn(user.UserPoolId, user.Email, user.Password);
+                return Ok(response.Token);
             }
             catch (Exception exception)
             {

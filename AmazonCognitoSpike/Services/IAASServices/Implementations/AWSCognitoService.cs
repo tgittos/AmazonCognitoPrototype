@@ -4,11 +4,11 @@ using Amazon;
 using Amazon.CognitoIdentityProvider;
 using Amazon.CognitoIdentityProvider.Model;
 
-namespace AmazonCognitoSpike.Services
+namespace AmazonCognitoSpike.Services.IAASServices.Implementations
 {
-    public class AWSCognitoService
+    public class AWSCognitoService : IIAASService
     {
-        private AmazonCognitoIdentityProviderClient Client;
+        private readonly AmazonCognitoIdentityProviderClient Client;
 
         // TODO: move these to appsettings.json, read from there
         private const string ClientId = "13vons313o3s04lfv68jjc8lqe";
@@ -19,7 +19,17 @@ namespace AmazonCognitoSpike.Services
             Client = new AmazonCognitoIdentityProviderClient(Region);
         }
 
-        public async Task<SignUpResponse> RegisterUser(string email, string password)
+        public async Task CreateUserPool()
+        {
+            var request = new CreateUserPoolRequest
+            {
+
+            }
+
+            var response = await Client.CreateUserPoolAsync(request);
+        }
+
+        public async Task <IAASUserRegisterResponse> Register(string email, string password)
         {
             var request = new SignUpRequest
             {
@@ -28,10 +38,12 @@ namespace AmazonCognitoSpike.Services
                 Password = password
             };
 
-            return await Client.SignUpAsync(request);
+            var response = await Client.SignUpAsync(request);
+
+            return new IAASUserRegisterResponse();
         }
 
-        public async Task<AdminInitiateAuthResponse> SignIn(string userPoolId, string email, string password)
+        public async Task<IAASUserSignInResponse> SignIn(string userPoolId, string email, string password)
         {
             var request = new AdminInitiateAuthRequest
             {
@@ -43,7 +55,12 @@ namespace AmazonCognitoSpike.Services
             request.AuthParameters.Add("USERNAME", email);
             request.AuthParameters.Add("PASSWORD", password);
 
-            return await Client.AdminInitiateAuthAsync(request);
+            var response = await Client.AdminInitiateAuthAsync(request);
+
+            return new IAASUserSignInResponse
+            {
+                Token = response.AuthenticationResult.IdToken
+            };
         }
     }
 }

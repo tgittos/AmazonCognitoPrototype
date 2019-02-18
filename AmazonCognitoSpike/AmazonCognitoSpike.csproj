@@ -7,6 +7,9 @@
   <ItemGroup>
     <Folder Include="wwwroot\" />
     <Folder Include="Services\" />
+    <Folder Include="Services\IAASServices\" />
+    <Folder Include="Controllers\Authentication\" />
+    <Folder Include="Services\IAASServices\Implementations\" />
   </ItemGroup>
 
   <ItemGroup>
