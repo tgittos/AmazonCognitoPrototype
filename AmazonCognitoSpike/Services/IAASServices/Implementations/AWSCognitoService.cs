@@ -19,14 +19,30 @@ namespace AmazonCognitoSpike.Services.IAASServices.Implementations
             Client = new AmazonCognitoIdentityProviderClient(Region);
         }
 
-        public async Task CreateUserPool()
+        public async Task<IAASCreateUserPoolResponse> CreateUserPool(IAASCreateUserPoolRequest createRequest)
         {
             var request = new CreateUserPoolRequest
             {
-
-            }
+                PoolName = createRequest.Name,
+                Policies = new UserPoolPolicyType
+                {
+                    PasswordPolicy = new PasswordPolicyType
+                    {
+                        MinimumLength = createRequest.PasswordPolicy.MinimumLength,
+                        RequireLowercase = createRequest.PasswordPolicy.RequireLowercase,
+                        RequireNumbers = createRequest.PasswordPolicy.RequireNumbers,
+                        RequireSymbols = createRequest.PasswordPolicy.RequireSymbols,
+                        RequireUppercase = createRequest.PasswordPolicy.RequireUppercase
+                    }
+                }
+            };
 
             var response = await Client.CreateUserPoolAsync(request);
+
+            return new IAASCreateUserPoolResponse
+            {
+                Id = response.UserPool.Id
+            };
         }
 
         public async Task <IAASUserRegisterResponse> Register(string email, string password)
@@ -61,6 +77,19 @@ namespace AmazonCognitoSpike.Services.IAASServices.Implementations
             {
                 Token = response.AuthenticationResult.IdToken
             };
+        }
+
+        public async Task<IAASUserSignOutResponse> SignOut(string userPoolId, string email)
+        {
+            var request = new AdminUserGlobalSignOutRequest
+            {
+                UserPoolId = userPoolId,
+                Username = email
+            };
+
+            var response = await Client.AdminUserGlobalSignOutAsync(request);
+
+            return new IAASUserSignOutResponse();
         }
     }
 }

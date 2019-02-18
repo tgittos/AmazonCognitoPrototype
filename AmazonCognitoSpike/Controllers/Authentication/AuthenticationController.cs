@@ -23,6 +23,23 @@ namespace AmazonCognitoSpike.Controllers.Authentication
             authService = _authService;
         }
 
+        // POST api/authentication/createUserPool
+        [HttpPost]
+        [Route("createUserPool", Name = "CreateUserPool")]
+        public async Task<ActionResult<string>> CreateUserPool(IAASCreateUserPoolRequest pool)
+        {
+            try
+            {
+                var response = await authService.CreateUserPool(pool);
+                return Ok(response.Id);
+            }
+            catch (Exception exception)
+            {
+                return BadRequest(exception);
+            }
+
+        }
+
         // POST api/authentication/register
         [HttpPost]
         [Route("register", Name = "Register")]
