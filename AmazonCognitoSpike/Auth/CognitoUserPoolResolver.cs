@@ -1,35 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using AmazonCognitoSpike.Data;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using System.Linq;
 
 namespace AmazonCognitoSpike.Auth
 {
 
     public class CognitoUserPoolResolver : IAudienceAuthorityResolver
     {
-        private class AudienceAuthorityPair
+        private readonly DataContext db;
+
+        public CognitoUserPoolResolver(DataContext _db)
         {
-            public string Audience { get; set; }
-            public string Authority { get; set; }
+            db = _db;
         }
 
-        public CognitoUserPoolResolver()
+        public void Resolve(Guid organizationId, JwtBearerOptions options)
         {
-        }
-
-        public void Resolve(string organizationId, JwtBearerOptions options)
-        {
-            var orgMap = new Dictionary<string, AudienceAuthorityPair>
-            {
-                { "us-east-2_Lo9UKkZM2", new AudienceAuthorityPair { Audience = "13vons313o3s04lfv68jjc8lqe", Authority = "https://cognito-idp.us-east-2.amazonaws.com/us-east-2_Lo9UKkZM2" }},
-                { "us-east-2_lqL388S1H", new AudienceAuthorityPair { Audience = "4jqk2qmccj2kh8mu99cqmbutu6", Authority = "https://cognito-idp.us-east-2.amazonaws.com/us-east-2_lqL388S1H" }}
-
-            };
-
-            var audienceAuthority = orgMap[organizationId];
-            ConfigureOnceResolved(audienceAuthority.Audience, audienceAuthority.Authority, options);
+            var org = db.Organizations.FirstOrDefault(o => o.OrganizationId == organizationId);
+            ConfigureOnceResolved(org.CognitoAudience, org.CognitoAuthority, options);
         }
 
         private void ConfigureOnceResolved(string Audience, string Authority, JwtBearerOptions options)

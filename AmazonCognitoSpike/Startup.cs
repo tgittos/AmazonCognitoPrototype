@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using AmazonCognitoSpike.Auth;
 using Microsoft.Extensions.DependencyInjection;
+using AmazonCognitoSpike.Data;
 
 namespace AmazonCognitoSpike
 {
@@ -32,12 +33,13 @@ namespace AmazonCognitoSpike
             services.AddAuthentication("Bearer")
                 .DSAddJwtBearer(options =>
                 {
-                    options.AudienceAuthorityResolver = new CognitoUserPoolResolver();
+                    options.AudienceAuthorityResolver = new CognitoUserPoolResolver(new DataContext());
                 });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             services.AddScoped<IIAASService, AWSCognitoService>();
+            services.AddScoped<DataContext>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

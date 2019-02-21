@@ -13,6 +13,7 @@ namespace AmazonCognitoSpike.Services.IAASServices.Implementations
 
         // TODO: move these to appsettings.json, read from there
         private readonly RegionEndpoint Region = RegionEndpoint.USEast2;
+        private readonly string BaseAuthority = "https://cognito-idp.us-east-2.amazonaws.com";
 
         private readonly List<string> SupportedAuthFlows = new List<string>
         {
@@ -22,6 +23,7 @@ namespace AmazonCognitoSpike.Services.IAASServices.Implementations
         public AWSCognitoService()
         {
             Client = new AmazonCognitoIdentityProviderClient(Region);
+            
         }
 
         public async Task<IAASCreateUserPoolResponse> CreateUserPool(IAASCreateUserPoolRequest createRequest)
@@ -49,7 +51,8 @@ namespace AmazonCognitoSpike.Services.IAASServices.Implementations
             return new IAASCreateUserPoolResponse
             {
                 Id = response.UserPool.Id,
-                ClientId = clientId
+                Audience = clientId,
+                Authority = $"{BaseAuthority}/{response.UserPool.Id}"
             };
         }
 

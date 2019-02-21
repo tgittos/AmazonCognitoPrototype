@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.CognitoIdentityProvider;
 using Amazon.CognitoIdentityProvider.Model;
+using AmazonCognitoSpike.Data;
+using AmazonCognitoSpike.Data.Models;
 using AmazonCognitoSpike.Services.IAASServices;
 using AmazonCognitoSpike.Services.IAASServices.Implementations;
 using Microsoft.AspNetCore.Authorization;
@@ -16,22 +18,36 @@ namespace AmazonCognitoSpike.Controllers.Authentication
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
+        private readonly DataContext db;
         private readonly IIAASService authService;
 
-        public AuthenticationController(IIAASService _authService)
+        public AuthenticationController(DataContext _db, IIAASService _authService)
         {
+            db = _db;
             authService = _authService;
         }
 
         // POST api/authentication/createUserPool
         [HttpPost]
-        [Route("createUserPool", Name = "CreateUserPool")]
-        public async Task<ActionResult<string>> CreateUserPool(IAASCreateUserPoolRequest pool)
+        [Route("createOrganization", Name = "CreateOrganization")]
+        public async Task<ActionResult<string>> CreateOrganization(IAASCreateUserPoolRequest pool)
         {
             try
             {
                 var response = await authService.CreateUserPool(pool);
-                return Ok(response.Id);
+                var newOrg = new Organization
+                {
+                    OrganizationId = Guid.NewGuid(),
+                    CognitoUserPoolId = response.Id,
+                    CognitoAuthority = response.Authority,
+                    CognitoAudience = response.Audience
+                };
+                db.Organizations.Add(newOrg);
+                db.SaveChanges();
+                return Ok(new CreateOrganizationResponse
+                {
+                    OrganizationId = newOrg.OrganizationId
+                });
             }
             catch (Exception exception)
             {
@@ -43,11 +59,12 @@ namespace AmazonCognitoSpike.Controllers.Authentication
         // POST api/authentication/register
         [HttpPost]
         [Route("register", Name = "Register")]
-        public async Task<ActionResult<string>> Register(UserRegisterParams user)
+        public async Task<ActionResult<string>> Register([FromHeader] Guid orgId, UserRegisterParams user)
         {
             try
             {
-                await authService.Register(user.UserPoolClientId, user.Email, user.Password);
+                var org = db.Organizations.FirstOrDefault(o => o.OrganizationId == orgId);
+                await authService.Register(org.CognitoAudience, user.Email, user.Password);
                 return Ok();
             }
             catch (Exception exception)
@@ -59,11 +76,12 @@ namespace AmazonCognitoSpike.Controllers.Authentication
         // POST api/authentication/signin
         [HttpPost]
         [Route("signin", Name = "SignIn")]
-        public async Task<ActionResult<string>> SignIn(UserSignInParams user)
+        public async Task<ActionResult<string>> SignIn([FromHeader] Guid orgId, UserSignInParams user)
         {
             try
             {
-                var response = await authService.SignIn(user.UserPoolId, user.UserPoolClientId, user.Email, user.Password);
+                var org = db.Organizations.FirstOrDefault(o => o.OrganizationId == orgId);
+                var response = await authService.SignIn(org.CognitoUserPoolId, org.CognitoAudience, user.Email, user.Password);
                 return Ok(response.Token);
             }
             catch (Exception exception)

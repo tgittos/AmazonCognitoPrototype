@@ -84,8 +84,8 @@ namespace AmazonCognitoSpike.Auth
                 }
 
                 // Grab the org ID from the header
-                string organizationId = Request.Headers["OrgID"];
-                if (string.IsNullOrEmpty(organizationId))
+                Guid organizationId = Guid.Parse(Request.Headers["OrgID"]);
+                if (organizationId == Guid.Empty)
                 {
                     return AuthenticateResult.NoResult();
                 }
