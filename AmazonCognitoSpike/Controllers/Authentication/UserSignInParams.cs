@@ -7,5 +7,7 @@ namespace AmazonCognitoSpike.Controllers.Authentication
         public string Password { get; set; }
         // TODO: save this to the Org record in the API project when integrating
         public string UserPoolId { get; set; }
+        // TODO: save this to the Org record in the API project when integrating
+        public string UserPoolClientId { get; set; }
     }
 }

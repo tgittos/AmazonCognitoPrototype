@@ -10,9 +10,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using AmazonCognitoSpike.Auth;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AmazonCognitoSpike
 {
@@ -26,14 +27,12 @@ namespace AmazonCognitoSpike
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
         {
             services.AddAuthentication("Bearer")
-                .AddJwtBearer(options =>
+                .DSAddJwtBearer(options =>
                 {
-                    // TODO: Move this to the appsettings.json file
-                    options.Audience = "13vons313o3s04lfv68jjc8lqe";
-                    options.Authority = "https://cognito-idp.us-east-2.amazonaws.com/us-east-2_Lo9UKkZM2";
+                    options.AudienceAuthorityResolver = new CognitoUserPoolResolver();
                 });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);

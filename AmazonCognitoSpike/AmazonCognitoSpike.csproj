@@ -10,6 +10,7 @@
     <Folder Include="Services\IAASServices\" />
     <Folder Include="Controllers\Authentication\" />
     <Folder Include="Services\IAASServices\Implementations\" />
+    <Folder Include="Auth\" />
   </ItemGroup>
 
   <ItemGroup>

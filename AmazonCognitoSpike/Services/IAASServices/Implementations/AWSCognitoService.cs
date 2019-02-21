@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.CognitoIdentityProvider;
@@ -11,8 +12,12 @@ namespace AmazonCognitoSpike.Services.IAASServices.Implementations
         private readonly AmazonCognitoIdentityProviderClient Client;
 
         // TODO: move these to appsettings.json, read from there
-        private const string ClientId = "13vons313o3s04lfv68jjc8lqe";
         private readonly RegionEndpoint Region = RegionEndpoint.USEast2;
+
+        private readonly List<string> SupportedAuthFlows = new List<string>
+        {
+            AuthFlowType.ADMIN_NO_SRP_AUTH
+        };
 
         public AWSCognitoService()
         {
@@ -39,17 +44,20 @@ namespace AmazonCognitoSpike.Services.IAASServices.Implementations
 
             var response = await Client.CreateUserPoolAsync(request);
 
+            var clientId = await CreateUserPoolClient($"{createRequest.Name} Prototype Client", response.UserPool.Id);
+
             return new IAASCreateUserPoolResponse
             {
-                Id = response.UserPool.Id
+                Id = response.UserPool.Id,
+                ClientId = clientId
             };
         }
 
-        public async Task <IAASUserRegisterResponse> Register(string email, string password)
+        public async Task <IAASUserRegisterResponse> Register(string userPoolClientId, string email, string password)
         {
             var request = new SignUpRequest
             {
-                ClientId = ClientId,
+                ClientId = userPoolClientId,
                 Username = email,
                 Password = password
             };
@@ -59,12 +67,12 @@ namespace AmazonCognitoSpike.Services.IAASServices.Implementations
             return new IAASUserRegisterResponse();
         }
 
-        public async Task<IAASUserSignInResponse> SignIn(string userPoolId, string email, string password)
+        public async Task<IAASUserSignInResponse> SignIn(string userPoolId, string userPoolClientId, string email, string password)
         {
             var request = new AdminInitiateAuthRequest
             {
                 UserPoolId = userPoolId,
-                ClientId = ClientId,
+                ClientId = userPoolClientId,
                 AuthFlow = AuthFlowType.ADMIN_NO_SRP_AUTH
             };
 
@@ -90,6 +98,20 @@ namespace AmazonCognitoSpike.Services.IAASServices.Implementations
             var response = await Client.AdminUserGlobalSignOutAsync(request);
 
             return new IAASUserSignOutResponse();
+        }
+
+        private async Task<string> CreateUserPoolClient(string clientName, string userPoolId)
+        {
+            var request = new CreateUserPoolClientRequest
+            {
+                ClientName = clientName,
+                UserPoolId = userPoolId,
+                ExplicitAuthFlows = SupportedAuthFlows
+            };
+
+            var response = await Client.CreateUserPoolClientAsync(request);
+
+            return response.UserPoolClient.ClientId;
         }
     }
 }

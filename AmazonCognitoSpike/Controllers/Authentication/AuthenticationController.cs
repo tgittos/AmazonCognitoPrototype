@@ -47,7 +47,7 @@ namespace AmazonCognitoSpike.Controllers.Authentication
         {
             try
             {
-                await authService.Register(user.Email, user.Password);
+                await authService.Register(user.UserPoolClientId, user.Email, user.Password);
                 return Ok();
             }
             catch (Exception exception)
@@ -63,7 +63,7 @@ namespace AmazonCognitoSpike.Controllers.Authentication
         {
             try
             {
-                var response = await authService.SignIn(user.UserPoolId, user.Email, user.Password);
+                var response = await authService.SignIn(user.UserPoolId, user.UserPoolClientId, user.Email, user.Password);
                 return Ok(response.Token);
             }
             catch (Exception exception)

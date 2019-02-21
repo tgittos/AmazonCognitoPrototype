@@ -5,5 +5,6 @@ namespace AmazonCognitoSpike.Controllers.Authentication
     {
         public string Email { get; set; }
         public string Password { get; set; }
+        public string UserPoolClientId { get; set; }
     }
 }
